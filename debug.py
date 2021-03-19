@@ -1,5 +1,9 @@
 import torch
 import dgl
+import numpy
 
-g = dgl.graph((torch.tensor([0, 0, 1, 1]), torch.tensor([1, 0, 2, 3])))
-print(g.in_edges(torch.tensor([1, 0]), form='eid'))
+
+b = torch.Tensor([1, 2])
+print(b)
+print(b.unsqueeze(1))
+

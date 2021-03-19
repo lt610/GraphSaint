@@ -5,13 +5,13 @@ import numpy as np
 import dgl.function as fn
 import torch
 import dgl
-from dgl.sampling import random_walk
+from dgl.sampling import random_walk, pack_traces
 
 
 class SAINTSampler(object):
     def __init__(self, dn, g, train_nid, num_batch, num_repeat=50):
         self.train_g: dgl.graph = g.subgraph(train_nid)
-        self.dn, self.num_batch, self.num_repeat = dn, num_batch, num_repeat
+        self.dn, self.num_repeat = dn, num_repeat
         self.node_counter = th.zeros((self.train_g.num_nodes(),))
         self.edge_counter = th.zeros((self.train_g.num_edges(),))
         self.prob = None
@@ -20,7 +20,8 @@ class SAINTSampler(object):
 
         if os.path.exists(graph_fn):
             self.subgraphs = np.load(graph_fn, allow_pickle=True)
-            self.alp, self.lam = np.load(norm_fn, allow_pickle=True)
+            aggr_norm, loss_norm = np.load(norm_fn, allow_pickle=True)
+
         else:
             os.makedirs('./datasets/', exist_ok=True)
 
@@ -31,12 +32,18 @@ class SAINTSampler(object):
                 self.subgraphs.append(subgraph)
                 sampled_nodes += subgraph.shape[0]
                 self.N += 1
+
             np.save(graph_fn, self.subgraphs)
+            aggr_norm, loss_norm = self.__compute_norm__()
+            np.save(norm_fn, (aggr_norm, loss_norm))
 
-            self.aggr_norm, self.loss_norm = self.__compute_norm__()
-            np.save(norm_fn, (self.alp, self.lam))
+        self.train_g.ndata['l_n'] = th.Tensor(loss_norm)
+        self.train_g.edata['w'] = self.__compute__weight() * th.Tensor(aggr_norm)
+        self.num_batch = num_batch if num_batch < len(self.subgraphs) else len(self.subgraphs)
 
-            self.__clear__()
+        random.shuffle(self.subgraphs)
+        self.__clear__()
+        print("The number of subgraphs is: ", len(self.subgraphs))
 
     def __clear__(self):
         self.prob = None
@@ -44,23 +51,43 @@ class SAINTSampler(object):
         self.edge_counter = None
 
     def __counter__(self, sampled_nodes):
+
         self.node_counter[sampled_nodes] += 1
+
         in_edges, out_edges = self.train_g.in_edges(sampled_nodes, form="eid"),\
                               self.train_g.out_edges(sampled_nodes, form="eid")
-        sampled_edges = th.cat(in_edges, out_edges)
+
+        sampled_edges = th.cat([in_edges, out_edges])
         self.edge_counter[sampled_edges] += 1
 
     def __generate_fn__(self):
         raise NotImplementedError
 
-
     def __compute_norm__(self):
+        self.node_counter[self.node_counter == 0] = 1
+        self.edge_counter[self.edge_counter == 0] = 1
+
         loss_norm = self.N / self.node_counter / self.train_g.num_nodes()
 
+        self.train_g.ndata['n_c'] = self.node_counter
+        self.train_g.edata['e_c'] = self.edge_counter
+        self.train_g.apply_edges(fn.u_div_e('n_c', 'e_c', 'a_n'))
+        aggr_norm = self.train_g.edata.pop('a_n')
 
+        self.train_g.ndata.pop('n_c')
+        self.train_g.edata.pop('e_c')
 
-        aggr_norm, loss_norm = 1, 1
-        return aggr_norm, loss_norm
+        return aggr_norm.numpy(), loss_norm.numpy()
+
+    def __compute__weight(self):
+        self.train_g.ndata['D_in'] = self.train_g.in_degrees().float().sqrt()
+        self.train_g.ndata['D_out'] = self.train_g.out_degrees().float().sqrt()
+        self.train_g.apply_edges(fn.u_mul_v('D_in', 'D_out', 'e'))
+
+        self.train_g.ndata.pop('D_in')
+        self.train_g.ndata.pop('D_out')
+
+        return self.train_g.edata.pop('e')
 
     def __sample__(self):
         raise NotImplementedError
@@ -74,11 +101,12 @@ class SAINTSampler(object):
 
     def __next__(self):
         if self.n < self.num_batch:
+            result = self.train_g.subgraph(self.subgraphs[self.n])
             self.n += 1
-            return self.train_g.subgraph(self.subgraphs[self.n])
+            return result
         else:
             random.shuffle(self.subgraphs)
-            return StopIteration
+            raise StopIteration()
 
 
 class SAINTNodeSampler(SAINTSampler):
@@ -95,7 +123,7 @@ class SAINTNodeSampler(SAINTSampler):
 
     def __sample__(self):
         if self.prob is None:
-            degrees = self.train_g.in_degrees()
+            degrees = self.train_g.in_degrees().float()
             self.prob = degrees ** 2
         sampled_nodes = th.multinomial(self.prob, num_samples=self.node_budget, replacement=True).unique()
         self.__counter__(sampled_nodes)
@@ -118,7 +146,7 @@ class SAINTEdgeSampler(SAINTSampler):
     def __sample__(self):
         if self.prob is None:
             src, dst = self.train_g.edges()
-            src_degrees, dst_degrees = self.train_g.in_degrees(src), self.train_g.in_degrees(dst)
+            src_degrees, dst_degrees = self.train_g.in_degrees(src).float(), self.train_g.in_degrees(dst).float()
             self.prob = 1. / src_degrees + 1. /dst_degrees
         sampled_edges = th.multinomial(self.prob, num_samples=self.edge_budget, replacement=True).unique()
         sampled_src, sampled_dst = self.train_g.find_edges(sampled_edges)
@@ -141,9 +169,9 @@ class SAINTRandomWalkSampler(SAINTSampler):
 
     def __sample__(self):
         sampled_roots = th.randint(0, self.train_g.num_nodes(), (self.num_roots, )).unique()
-        traces, _ = random_walk(self.train_g, nodes=sampled_roots, length=self.length)
-        sampled_nodes = traces.reshape(-1).unique()
-        self.__counter__(sampled_nodes)
+        traces, types = random_walk(self.train_g, nodes=sampled_roots, length=self.length)
+        sampled_nodes, _, _, _ = pack_traces(traces, types)
+        self.__counter__(sampled_nodes.unique())
         return sampled_nodes.numpy()
 
 

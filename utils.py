@@ -53,6 +53,7 @@ def evaluate(model, g, labels, mask, multitask=False):
                                  logits.cpu().numpy(), multitask)
         return f1_mic, f1_mac
 
+
 def load_data(args):
     '''Wraps the dgl's load_data utility to handle ppi special case'''
     DataType = namedtuple('Dataset', ['num_classes', 'g'])
@@ -86,6 +87,8 @@ def load_data(args):
     G.ndata['train_mask'] = torch.tensor(train_mask, dtype=torch.bool)
     G.ndata['val_mask'] = torch.tensor(val_mask, dtype=torch.bool)
     G.ndata['test_mask'] = torch.tensor(test_mask, dtype=torch.bool)
+
+    G = dgl.remove_self_loop(G)
 
     data = DataType(g=G, num_classes=train_dataset.num_labels)
     return data
