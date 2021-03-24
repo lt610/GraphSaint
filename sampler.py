@@ -1,4 +1,7 @@
+import math
 import os
+import time
+
 import torch as th
 import random
 import numpy as np
@@ -9,7 +12,7 @@ from dgl.sampling import random_walk, pack_traces
 
 
 class SAINTSampler(object):
-    def __init__(self, dn, g, train_nid, num_batch, num_repeat=50):
+    def __init__(self, dn, g, train_nid, node_budget, num_repeat=50):
         self.train_g: dgl.graph = g.subgraph(train_nid)
         self.dn, self.num_repeat = dn, num_repeat
         self.node_counter = th.zeros((self.train_g.num_nodes(),))
@@ -21,29 +24,34 @@ class SAINTSampler(object):
         if os.path.exists(graph_fn):
             self.subgraphs = np.load(graph_fn, allow_pickle=True)
             aggr_norm, loss_norm = np.load(norm_fn, allow_pickle=True)
-
         else:
-            os.makedirs('./datasets/', exist_ok=True)
+            os.makedirs('./subgraphs/', exist_ok=True)
 
             self.subgraphs = []
             self.N = sampled_nodes = 0
+
+            start_time = time.time()
             while sampled_nodes < self.train_g.num_nodes() * num_repeat:
                 subgraph = self.__sample__()
                 self.subgraphs.append(subgraph)
                 sampled_nodes += subgraph.shape[0]
                 self.N += 1
+            end_time = time.time()
+            print("The time of sampling {} subgraph: {:.3f} sec".format(self.N, end_time - start_time))
 
             np.save(graph_fn, self.subgraphs)
             aggr_norm, loss_norm = self.__compute_norm__()
             np.save(norm_fn, (aggr_norm, loss_norm))
 
         self.train_g.ndata['l_n'] = th.Tensor(loss_norm)
-        self.train_g.edata['w'] = self.__compute__weight() * th.Tensor(aggr_norm)
-        self.num_batch = num_batch if num_batch < len(self.subgraphs) else len(self.subgraphs)
+        self.train_g.edata['w'] = th.Tensor(aggr_norm)
+        self.__compute__degree()
 
+        self.num_batch = math.ceil(self.train_g.num_nodes() / node_budget)
         random.shuffle(self.subgraphs)
         self.__clear__()
         print("The number of subgraphs is: ", len(self.subgraphs))
+        print("The size of subgraphs is about: ", len(self.subgraphs[-1]))
 
     def __clear__(self):
         self.prob = None
@@ -79,15 +87,9 @@ class SAINTSampler(object):
 
         return aggr_norm.numpy(), loss_norm.numpy()
 
-    def __compute__weight(self):
-        self.train_g.ndata['D_in'] = self.train_g.in_degrees().float().sqrt()
-        self.train_g.ndata['D_out'] = self.train_g.out_degrees().float().sqrt()
-        self.train_g.apply_edges(fn.u_mul_v('D_in', 'D_out', 'e'))
-
-        self.train_g.ndata.pop('D_in')
-        self.train_g.ndata.pop('D_out')
-
-        return self.train_g.edata.pop('e')
+    def __compute__degree(self):
+        self.train_g.ndata['D_in'] = 1. / self.train_g.in_degrees().float().sqrt().unsqueeze(1)
+        self.train_g.ndata['D_out'] = 1. / self.train_g.out_degrees().float().sqrt().unsqueeze(1)
 
     def __sample__(self):
         raise NotImplementedError
@@ -110,21 +112,21 @@ class SAINTSampler(object):
 
 
 class SAINTNodeSampler(SAINTSampler):
-    def __init__(self, node_budget, dn, g, train_nid, num_batch, num_repeat=50):
+    def __init__(self, node_budget, dn, g, train_nid, num_repeat=50):
         self.node_budget = node_budget
-        super(SAINTNodeSampler, self).__init__(dn, g, train_nid, num_batch, num_repeat)
+        super(SAINTNodeSampler, self).__init__(dn, g, train_nid, node_budget, num_repeat)
 
     def __generate_fn__(self):
-        graph_fn = os.path.join('./datasets/{}_Node_{}_{}.npy'.format(self.dn, self.node_budget,
-                                                                      self.num_repeat))
-        norm_fn = os.path.join('./datasets/{}_Node_{}_{}_norm.npy'.format(self.dn, self.node_budget,
+        graph_fn = os.path.join('./subgraphs/{}_Node_{}_{}.npy'.format(self.dn, self.node_budget,
+                                                                       self.num_repeat))
+        norm_fn = os.path.join('./subgraphs/{}_Node_{}_{}_norm.npy'.format(self.dn, self.node_budget,
                                                                           self.num_repeat))
         return graph_fn, norm_fn
 
     def __sample__(self):
         if self.prob is None:
             degrees = self.train_g.in_degrees().float()
-            self.prob = degrees ** 2
+            self.prob = degrees
         sampled_nodes = th.multinomial(self.prob, num_samples=self.node_budget, replacement=True).unique()
         self.__counter__(sampled_nodes)
 
@@ -132,14 +134,14 @@ class SAINTNodeSampler(SAINTSampler):
 
 
 class SAINTEdgeSampler(SAINTSampler):
-    def __init__(self, edge_budget, dn, g, train_nid, num_batch, num_repeat=50):
+    def __init__(self, edge_budget, dn, g, train_nid, num_repeat=50):
         self.edge_budget = edge_budget
-        super(SAINTEdgeSampler, self).__init__(dn, g, train_nid, num_batch, num_repeat)
+        super(SAINTEdgeSampler, self).__init__(dn, g, train_nid, edge_budget * 2, num_repeat)
 
     def __generate_fn__(self):
-        graph_fn = os.path.join('./datasets/{}_Edge_{}_{}.npy'.format(self.dn, self.edge_budget,
+        graph_fn = os.path.join('./subgraphs/{}_Edge_{}_{}.npy'.format(self.dn, self.edge_budget,
                                                                       self.num_repeat))
-        norm_fn = os.path.join('./datasets/{}_Edge_{}_{}_norm.npy'.format(self.dn, self.edge_budget,
+        norm_fn = os.path.join('./subgraphs/{}_Edge_{}_{}_norm.npy'.format(self.dn, self.edge_budget,
                                                                           self.num_repeat))
         return graph_fn, norm_fn
 
@@ -156,14 +158,14 @@ class SAINTEdgeSampler(SAINTSampler):
 
 
 class SAINTRandomWalkSampler(SAINTSampler):
-    def __init__(self, num_roots, length, dn, g, train_nid, num_batch, num_repeat=50):
+    def __init__(self, num_roots, length, dn, g, train_nid, num_repeat=50):
         self.num_roots, self.length = num_roots, length
-        super(SAINTRandomWalkSampler, self).__init__(dn, g, train_nid, num_batch, num_repeat)
+        super(SAINTRandomWalkSampler, self).__init__(dn, g, train_nid, num_roots * length, num_repeat)
 
     def __generate_fn__(self):
-        graph_fn = os.path.join('./datasets/{}_RW_{}_{}_{}.npy'.format(self.dn, self.num_roots,
+        graph_fn = os.path.join('./subgraphs/{}_RW_{}_{}_{}.npy'.format(self.dn, self.num_roots,
                                                                         self.length, self.num_repeat))
-        norm_fn = os.path.join('./datasets/{}_RW_{}_{}_{}_norm.npy'.format(self.dn, self.num_roots,
+        norm_fn = os.path.join('./subgraphs/{}_RW_{}_{}_{}_norm.npy'.format(self.dn, self.num_roots,
                                                                            self.length, self.num_repeat))
         return graph_fn, norm_fn
 

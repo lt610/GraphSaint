@@ -6,11 +6,10 @@ import dgl.function as fn
 
 class GCNLayer(nn.Module):
     def __init__(self, in_dim, out_dim, bias=True,
-                 activation=None, graph_norm=True):
+                 activation=None):
         super(GCNLayer, self).__init__()
         self.linear = nn.Linear(in_dim, out_dim, bias=bias)
         self.activation = activation
-        self.graph_norm = graph_norm
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -18,13 +17,18 @@ class GCNLayer(nn.Module):
 
     def forward(self, graph, features):
         g = graph.local_var()
-        if self.graph_norm:
-            degs = g.in_degrees().float()
-            norm = th.pow(degs, -0.5)
-            norm[th.isinf(norm)] = 0
-            norm = norm.to(features.device).unsqueeze(1)
 
-        h = features * norm
+        if "D_in" in g.ndata:
+            D_in = g.ndata["D_in"]
+        else:
+            D_in = 1. / g.in_degrees().float().sqrt().unsqueeze(1)
+
+        if "D_out" in g.ndata:
+            D_out = g.ndata["D_out"]
+        else:
+            D_out = 1. / g.out_degrees().float().sqrt().unsqueeze(1)
+
+        h = features * D_out
         g.ndata['h'] = h
         # w is the weights of edges
         if 'w' not in g.edata:
@@ -32,8 +36,7 @@ class GCNLayer(nn.Module):
         g.update_all(fn.u_mul_e('h', 'w', 'm'),
                      fn.sum('m', 'h'))
         h = g.ndata.pop('h')
-        if self.graph_norm:
-            h = h * norm
+        h = h * D_in
         h = self.linear(h)
         if self.activation is not None:
             h = self.activation(h)

@@ -1,6 +1,9 @@
+import json
 import os
 from functools import namedtuple
-
+import scipy.sparse
+import scipy.sparse as sp
+from sklearn.preprocessing import StandardScaler
 import dgl
 import numpy as np
 import torch
@@ -54,41 +57,47 @@ def evaluate(model, g, labels, mask, multitask=False):
         return f1_mic, f1_mac
 
 
-def load_data(args):
-    '''Wraps the dgl's load_data utility to handle ppi special case'''
+def load_data(args, multitask):
+    prefix = "data/{}".format(args.dataset)
     DataType = namedtuple('Dataset', ['num_classes', 'g'])
-    if args.dataset != 'ppi':
-        dataset = _load_data(args)
-        data = DataType(g=dataset[0], num_classes=dataset.num_classes)
-        return data
-    train_dataset = PPIDataset('train')
-    train_graph = dgl.batch([train_dataset[i] for i in range(len(train_dataset))], edge_attrs=None, node_attrs=None)
-    val_dataset = PPIDataset('valid')
-    val_graph = dgl.batch([val_dataset[i] for i in range(len(val_dataset))], edge_attrs=None, node_attrs=None)
-    test_dataset = PPIDataset('test')
-    test_graph = dgl.batch([test_dataset[i] for i in range(len(test_dataset))], edge_attrs=None, node_attrs=None)
-    G = dgl.batch(
-        [train_graph, val_graph, test_graph], edge_attrs=None, node_attrs=None)
 
-    train_nodes_num = train_graph.number_of_nodes()
-    test_nodes_num = test_graph.number_of_nodes()
-    val_nodes_num = val_graph.number_of_nodes()
-    nodes_num = G.number_of_nodes()
-    assert(nodes_num == (train_nodes_num + test_nodes_num + val_nodes_num))
-    # construct mask
-    mask = np.zeros((nodes_num,), dtype=bool)
+    adj_full = scipy.sparse.load_npz('./{}/adj_full.npz'.format(prefix)).astype(np.bool)
+    g = dgl.from_scipy(adj_full)
+    num_nodes = g.number_of_nodes()
+
+    role = json.load(open('./{}/role.json'.format(prefix)))
+    mask = np.zeros((num_nodes,), dtype=bool)
     train_mask = mask.copy()
-    train_mask[:train_nodes_num] = True
+    train_mask[role['tr']] = True
     val_mask = mask.copy()
-    val_mask[train_nodes_num:-test_nodes_num] = True
+    val_mask[role['va']] = True
     test_mask = mask.copy()
-    test_mask[-test_nodes_num:] = True
+    test_mask[role['te']] = True
 
-    G.ndata['train_mask'] = torch.tensor(train_mask, dtype=torch.bool)
-    G.ndata['val_mask'] = torch.tensor(val_mask, dtype=torch.bool)
-    G.ndata['test_mask'] = torch.tensor(test_mask, dtype=torch.bool)
+    feats = np.load('./{}/feats.npy'.format(prefix))
+    scaler = StandardScaler()
+    scaler.fit(feats)
+    feats = scaler.transform(feats)
 
-    G = dgl.remove_self_loop(G)
+    class_map = json.load(open('./{}/class_map.json'.format(prefix)))
+    class_map = {int(k): v for k, v in class_map.items()}
+    if isinstance(list(class_map.values())[0], list):
+        num_classes = len(list(class_map.values())[0])
+        class_arr = np.zeros((num_nodes, num_classes))
+        for k, v in class_map.items():
+            class_arr[k] = v
+    else:
+        num_classes = max(class_map.values()) - min(class_map.values()) + 1
+        class_arr = np.zeros((num_nodes,))
+        for k, v in class_map.items():
+            class_arr[k] = v
 
-    data = DataType(g=G, num_classes=train_dataset.num_labels)
+    g.ndata['feat'] = torch.tensor(feats, dtype=torch.float)
+    g.ndata['label'] = torch.tensor(class_arr, dtype=torch.float if multitask else torch.long)
+    g.ndata['train_mask'] = torch.tensor(train_mask, dtype=torch.bool)
+    g.ndata['val_mask'] = torch.tensor(val_mask, dtype=torch.bool)
+    g.ndata['test_mask'] = torch.tensor(test_mask, dtype=torch.bool)
+
+    data = DataType(g=g, num_classes=num_classes)
     return data
+

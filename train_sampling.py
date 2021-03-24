@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import dgl
 from dgl.data import register_data_args
 
-from Sampler import SAINTNodeSampler, SAINTEdgeSampler, SAINTRandomWalkSampler
+from sampler import SAINTNodeSampler, SAINTEdgeSampler, SAINTRandomWalkSampler
 from modules import GCNNet
 from utils import Logger, evaluate, save_log_dir, load_data
 
@@ -24,11 +24,11 @@ def main(args):
     # torch.backends.cudnn.deterministic = True
     # torch.backends.cudnn.benchmark = False
 
-    multitask_data = set(['ppi'])
+    multitask_data = set(['ppi', 'yelp', 'amazon'])
     multitask = args.dataset in multitask_data
 
     # load and preprocess dataset
-    data = load_data(args)
+    data = load_data(args, multitask)
     g = data.g
     train_mask = g.ndata['train_mask']
     val_mask = g.ndata['val_mask']
@@ -60,13 +60,13 @@ def main(args):
 
     if args.sampler == "node":
         subg_iter = SAINTNodeSampler(args.node_budget, args.dataset, g,
-                                     train_nid, args.num_batch, args.num_repeat)
+                                     train_nid, args.num_repeat)
     elif args.sampler == "edge":
         subg_iter = SAINTEdgeSampler(args.edge_budget, args.dataset, g,
-                                     train_nid, args.num_batch, args.num_repeat)
+                                     train_nid, args.num_repeat)
     elif args.sampler == "rw":
         subg_iter = SAINTRandomWalkSampler(args.num_roots, args.length, args.dataset, g,
-                                            train_nid, args.num_batch, args.num_repeat)
+                                            train_nid, args.num_repeat)
 
     # set device for dataset tensors
     if args.gpu < 0:
@@ -135,8 +135,6 @@ def main(args):
             if j % args.log_every == 0:
                 print(f"epoch:{epoch}/{args.n_epochs}, Iteration {j}/"
                       f"{len(subg_iter)}:training loss", loss.item())
-        print("current memory:",
-              torch.cuda.memory_allocated(device=pred.device) / 1024 / 1024)
 
         # evaluate
         if epoch % args.val_every == 0:
@@ -151,10 +149,10 @@ def main(args):
                     log_dir, 'best_model.pkl'))
 
     end_time = time.time()
-    print(f'training using time {start_time - end_time}')
+    print(f'training using time {end_time - start_time}')
 
     # test
-    if args.use_val:
+    if True:
         model.load_state_dict(torch.load(os.path.join(
             log_dir, 'best_model.pkl')))
     test_f1_mic, test_f1_mac = evaluate(
@@ -167,28 +165,26 @@ if __name__ == '__main__':
     parser.add_argument("--gpu", type=int, default=0,
                         help="gpu")
     parser.add_argument("--dataset", type=str, default='ppi')
-    parser.add_argument("--sampler", type=str, default='node')
+    parser.add_argument("--sampler", type=str, default='edge')
     parser.add_argument("--node_budget", type=int, default=6000,
                         help="batch size")
     parser.add_argument("--edge_budget", type=int, default=4000,
                         help="batch size")
-    parser.add_argument("--num_roots", type=int, default=3000,
+    parser.add_argument("--num_roots", type=int, default=2000,
                         help="batch size")
-    parser.add_argument("--length", type=int, default=2,
+    parser.add_argument("--length", type=int, default=4,
                         help="batch size")
-    parser.add_argument("--num_batch", type=int, default=50,
-                        help="number of batch")
     parser.add_argument("--num_repeat", type=int, default=50,
                         help="number of repeat")
     parser.add_argument("--lr", type=float, default=0.01,
                         help="learning rate")
-    parser.add_argument("--n-epochs", type=int, default=200,
+    parser.add_argument("--n-epochs", type=int, default=100,
                         help="number of training epochs")
     parser.add_argument("--log-every", type=int, default=100,
                         help="the frequency to save model")
-    parser.add_argument("--n-hidden", type=int, default=32,
+    parser.add_argument("--n-hidden", type=int, default=512,
                         help="number of hidden gcn units")
-    parser.add_argument("--n-layers", type=int, default=3,
+    parser.add_argument("--n-layers", type=int, default=2,
                         help="number of hidden gcn layers")
     parser.add_argument("--val-every", type=int, default=1,
                         help="number of epoch of doing inference on validation")
