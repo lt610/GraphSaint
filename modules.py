@@ -6,8 +6,9 @@ import dgl.function as fn
 
 class GCNLayer(nn.Module):
     def __init__(self, in_dim, out_dim, bias=True,
-                 activation=None):
+                 activation=None, dropout=0):
         super(GCNLayer, self).__init__()
+        self.dropout = nn.Dropout()
         self.linear = nn.Linear(in_dim, out_dim, bias=bias)
         self.activation = activation
         self.reset_parameters()
@@ -37,6 +38,7 @@ class GCNLayer(nn.Module):
                      fn.sum('m', 'h'))
         h = g.ndata.pop('h')
         h = h * D_in
+
         h = self.linear(h)
         if self.activation is not None:
             h = self.activation(h)

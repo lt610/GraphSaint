@@ -7,8 +7,13 @@ import scipy.sparse as sp
 import scipy
 from dgl.data import CoraGraphDataset, PPIDataset
 from sklearn.preprocessing import StandardScaler
+import random
 
-print(3/2)
+
+a = th.Tensor([1, 2, 3, 4])
+b = th.LongTensor([1, 2])
+a[b] += 1
+print(a)
 
 
 

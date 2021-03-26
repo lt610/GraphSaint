@@ -37,7 +37,7 @@ class SAINTSampler(object):
                 sampled_nodes += subgraph.shape[0]
                 self.N += 1
             end_time = time.time()
-            print("The time of sampling {} subgraph: {:.3f} sec".format(self.N, end_time - start_time))
+            print("The time of sampling {} subgraph: {:.5f} sec".format(self.N, end_time - start_time))
 
             np.save(graph_fn, self.subgraphs)
             aggr_norm, loss_norm = self.__compute_norm__()

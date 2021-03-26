@@ -77,7 +77,7 @@ def main(args):
         val_mask = val_mask.cuda()
         test_mask = test_mask.cuda()
         # 这里的g是整张图
-        g = g.int().to(args.gpu)
+        g = g.to(args.gpu)
 
     print('labels shape:', g.ndata['label'].shape)
     print("features shape, ", g.ndata['feat'].shape)
@@ -130,10 +130,8 @@ def main(args):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            # in PPI case, `log_every` is chosen to log one time per epoch. 
-            # Choose your log freq dynamically when you want more info within one epoch
-            if j % args.log_every == 0:
-                print(f"epoch:{epoch}/{args.n_epochs}, Iteration {j}/"
+            if j == len(subg_iter) - 1:
+                print(f"epoch:{epoch+1}/{args.n_epochs}, Iteration {j+1}/"
                       f"{len(subg_iter)}:training loss", loss.item())
 
         # evaluate
@@ -165,24 +163,22 @@ if __name__ == '__main__':
     parser.add_argument("--gpu", type=int, default=0,
                         help="gpu")
     parser.add_argument("--dataset", type=str, default='ppi')
-    parser.add_argument("--sampler", type=str, default='edge')
+    parser.add_argument("--sampler", type=str, default='rw')
     parser.add_argument("--node_budget", type=int, default=6000,
                         help="batch size")
     parser.add_argument("--edge_budget", type=int, default=4000,
                         help="batch size")
-    parser.add_argument("--num_roots", type=int, default=2000,
+    parser.add_argument("--num_roots", type=int, default=3000,
                         help="batch size")
-    parser.add_argument("--length", type=int, default=4,
+    parser.add_argument("--length", type=int, default=2,
                         help="batch size")
     parser.add_argument("--num_repeat", type=int, default=50,
                         help="number of repeat")
     parser.add_argument("--lr", type=float, default=0.01,
                         help="learning rate")
-    parser.add_argument("--n-epochs", type=int, default=100,
+    parser.add_argument("--n-epochs", type=int, default=1000,
                         help="number of training epochs")
-    parser.add_argument("--log-every", type=int, default=100,
-                        help="the frequency to save model")
-    parser.add_argument("--n-hidden", type=int, default=512,
+    parser.add_argument("--n-hidden", type=int, default=256,
                         help="number of hidden gcn units")
     parser.add_argument("--n-layers", type=int, default=2,
                         help="number of hidden gcn layers")
