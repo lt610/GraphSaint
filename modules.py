@@ -19,6 +19,7 @@ class GCNLayer(nn.Module):
     def forward(self, graph, features):
         g = graph.local_var()
 
+        # I saved the training graph's degree norm during sampling into ndata["D_in"] and ["D_out"]
         if "D_in" in g.ndata:
             D_in = g.ndata["D_in"]
         else:
@@ -32,6 +33,7 @@ class GCNLayer(nn.Module):
         h = features * D_out
         g.ndata['h'] = h
         # w is the weights of edges
+        # I saved the aggregation norm computed during sampling into ndata["w"]
         if 'w' not in g.edata:
             g.edata['w'] = th.ones((g.num_edges(), )).to(features.device)
         g.update_all(fn.u_mul_e('h', 'w', 'm'),

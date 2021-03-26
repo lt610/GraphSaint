@@ -76,7 +76,6 @@ def main(args):
         torch.cuda.set_device(args.gpu)
         val_mask = val_mask.cuda()
         test_mask = test_mask.cuda()
-        # 这里的g是整张图
         g = g.to(args.gpu)
 
     print('labels shape:', g.ndata['label'].shape)
@@ -162,21 +161,21 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GCN')
     parser.add_argument("--gpu", type=int, default=0,
                         help="gpu")
-    parser.add_argument("--dataset", type=str, default='ppi')
+    parser.add_argument("--dataset", type=str, default='flickr')
     parser.add_argument("--sampler", type=str, default='rw')
     parser.add_argument("--node_budget", type=int, default=6000,
-                        help="batch size")
+                        help="expected number of sampled nodes when using node sampler")
     parser.add_argument("--edge_budget", type=int, default=4000,
-                        help="batch size")
-    parser.add_argument("--num_roots", type=int, default=3000,
-                        help="batch size")
+                        help="expected number of sampled edges when using edge sampler")
+    parser.add_argument("--num_roots", type=int, default=6000,
+                        help="expected number of sampled root nodes when using random walk sampler")
     parser.add_argument("--length", type=int, default=2,
-                        help="batch size")
-    parser.add_argument("--num_repeat", type=int, default=50,
-                        help="number of repeat")
+                        help="the length of random walk when using random walk sampler")
+    parser.add_argument("--num_repeat", type=int, default=25,
+                        help="number of repeating sampling one node")
     parser.add_argument("--lr", type=float, default=0.01,
                         help="learning rate")
-    parser.add_argument("--n-epochs", type=int, default=1000,
+    parser.add_argument("--n-epochs", type=int, default=50,
                         help="number of training epochs")
     parser.add_argument("--n-hidden", type=int, default=256,
                         help="number of hidden gcn units")

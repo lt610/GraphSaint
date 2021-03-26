@@ -10,9 +10,17 @@ import torch
 import dgl
 from dgl.sampling import random_walk, pack_traces
 
-
+# The base class of sampler
 class SAINTSampler(object):
     def __init__(self, dn, g, train_nid, node_budget, num_repeat=50):
+        """
+
+        :param dn: name of dataset
+        :param g: full graph
+        :param train_nid: ids of training nodes
+        :param node_budget: expected number of sampled nodes
+        :param num_repeat: number of repeating sampling one node
+        """
         self.train_g: dgl.graph = g.subgraph(train_nid)
         self.dn, self.num_repeat = dn, num_repeat
         self.node_counter = th.zeros((self.train_g.num_nodes(),))

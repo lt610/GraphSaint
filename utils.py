@@ -57,6 +57,7 @@ def evaluate(model, g, labels, mask, multitask=False):
         return f1_mic, f1_mac
 
 
+# load data of GraphSaint and translate them to the format of dgl
 def load_data(args, multitask):
     prefix = "data/{}".format(args.dataset)
     DataType = namedtuple('Dataset', ['num_classes', 'g'])

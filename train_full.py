@@ -11,7 +11,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import dgl
 from dgl.data import register_data_args
-
 from sampler import SAINTNodeSampler, SAINTEdgeSampler, SAINTRandomWalkSampler
 from modules import GCNNet
 from utils import Logger, evaluate, save_log_dir, load_data
@@ -67,7 +66,6 @@ def main(args):
         torch.cuda.set_device(args.gpu)
         val_mask = val_mask.cuda()
         test_mask = test_mask.cuda()
-        # g is a full graph
         g = g.to(args.gpu)
         train_g = train_g.to(args.gpu)
 
@@ -144,12 +142,12 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GCN')
-    parser.add_argument("--gpu", type=int, default=0,
+    parser.add_argument("--gpu", type=int, default=3,
                         help="gpu")
-    parser.add_argument("--dataset", type=str, default='yelp')
+    parser.add_argument("--dataset", type=str, default='ppi')
     parser.add_argument("--lr", type=float, default=0.01,
                         help="learning rate")
-    parser.add_argument("--n-epochs", type=int, default=30,
+    parser.add_argument("--n-epochs", type=int, default=50,
                         help="number of training epochs")
     parser.add_argument("--log-every", type=int, default=100,
                         help="the frequency to save model")
