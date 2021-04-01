@@ -76,7 +76,9 @@ def main(args):
         in_dim=in_feats,
         hid_dim=args.n_hidden,
         out_dim=n_classes,
-        n_layers=args.n_layers,
+        arch=args.arch,
+        dropout=args.dropout,
+        batch_norm=args.batch_norm
     )
 
     if cuda:
@@ -142,27 +144,29 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GCN')
-    parser.add_argument("--gpu", type=int, default=3,
+    parser.add_argument("--gpu", type=int, default=-1,
                         help="gpu")
     parser.add_argument("--dataset", type=str, default='ppi')
+
+    parser.add_argument("--n-epochs", type=int, default=1000,
+                        help="number of training epochs")
+
+    parser.add_argument("--n-hidden", type=int, default=512,
+                        help="number of hidden gcn units")
+    parser.add_argument("--arch", type=str, default="1-0-1-0")
+    parser.add_argument("--dropout", type=float, default=0)
+    parser.add_argument("--batch-norm", action='store_true')
     parser.add_argument("--lr", type=float, default=0.01,
                         help="learning rate")
-    parser.add_argument("--n-epochs", type=int, default=50,
-                        help="number of training epochs")
-    parser.add_argument("--log-every", type=int, default=100,
-                        help="the frequency to save model")
-    parser.add_argument("--n-hidden", type=int, default=256,
-                        help="number of hidden gcn units")
-    parser.add_argument("--n-layers", type=int, default=2,
-                        help="number of hidden gcn layers")
+    parser.add_argument("--weight-decay", type=float, default=0,
+                        help="Weight for L2 loss")
     parser.add_argument("--val-every", type=int, default=1,
                         help="number of epoch of doing inference on validation")
     parser.add_argument("--rnd-seed", type=int, default=3,
                         help="random seed")
     parser.add_argument("--use-val", action='store_true',
                         help="whether to use validated best model to test")
-    parser.add_argument("--weight-decay", type=float, default=0,
-                        help="Weight for L2 loss")
+
     parser.add_argument("--note", type=str, default='none',
                         help="note for log dir")
 
