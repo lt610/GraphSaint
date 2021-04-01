@@ -17,11 +17,6 @@ from utils import Logger, evaluate, save_log_dir, load_data
 
 
 def main(args):
-    # torch.manual_seed(args.rnd_seed)
-    # np.random.seed(args.rnd_seed)
-    # random.seed(args.rnd_seed)
-    # torch.backends.cudnn.deterministic = True
-    # torch.backends.cudnn.benchmark = False
 
     multitask_data = set(['ppi', 'yelp', 'amazon'])
     multitask = args.dataset in multitask_data
@@ -144,31 +139,35 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GCN')
+    # data source params
+    parser.add_argument("--dataset", type=str, choices=['ppi', 'flickr', 'reddit', 'yelp', 'amazon'], default='ppi',
+                        help="Name of dataset.")
+    # cuda params
     parser.add_argument("--gpu", type=int, default=-1,
-                        help="gpu")
-    parser.add_argument("--dataset", type=str, default='ppi')
-
-    parser.add_argument("--n-epochs", type=int, default=1000,
-                        help="number of training epochs")
-
+                        help="GPU index. Default: -1, using CPU.")
+    # model params
     parser.add_argument("--n-hidden", type=int, default=512,
-                        help="number of hidden gcn units")
-    parser.add_argument("--arch", type=str, default="1-0-1-0")
-    parser.add_argument("--dropout", type=float, default=0)
-    parser.add_argument("--batch-norm", action='store_true')
+                        help="Number of hidden gcn units")
+    parser.add_argument("--arch", type=str, default="1-0-1-0",
+                        help="Network architecture. 1 means an order 1 layer (self feature plus 1-hop neighbor "
+                             "feature), and 0 means an order 0 layer (self feature only)")
+    parser.add_argument("--dropout", type=float, default=0,
+                        help="Dropout rate")
+    parser.add_argument("--batch-norm", action='store_true',
+                        help="Whether to use batch norm")
+    # training params
+    parser.add_argument("--n-epochs", type=int, default=100,
+                        help="Number of training epochs")
     parser.add_argument("--lr", type=float, default=0.01,
-                        help="learning rate")
+                        help="Learning rate")
     parser.add_argument("--weight-decay", type=float, default=0,
-                        help="Weight for L2 loss")
+                        help="Weight for L2 reg")
     parser.add_argument("--val-every", type=int, default=1,
-                        help="number of epoch of doing inference on validation")
-    parser.add_argument("--rnd-seed", type=int, default=3,
-                        help="random seed")
+                        help="Number of epoch of doing inference on validation")
     parser.add_argument("--use-val", action='store_true',
-                        help="whether to use validated best model to test")
-
+                        help="Whether to use validated best model to test")
     parser.add_argument("--note", type=str, default='none',
-                        help="note for log dir")
+                        help="Note for log dir")
 
     args = parser.parse_args()
 

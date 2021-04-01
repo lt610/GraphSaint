@@ -14,7 +14,6 @@ from dgl.sampling import random_walk, pack_traces
 class SAINTSampler(object):
     def __init__(self, dn, g, train_nid, node_budget, num_repeat=50):
         """
-
         :param dn: name of dataset
         :param g: full graph
         :param train_nid: ids of training nodes
