@@ -73,7 +73,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
 | Paper | 0.960±0.001 | 0.507±0.001 | 0.962±0.001 | 0.641±0.000 | 0.782±0.004 |
-| Running | 0.9628 | 0.5077 | 0.9622 | 0.6393 |  |
+| Running | 0.9628 | 0.5077 | 0.9622 | 0.6393 | error |
 | DGL | 0.5257 | 0.4943 | 0.8721 | 0.4265 | oom |
 | DGL(Full) | 0.8765 | 0.5096 | 0.9456 | 0.4253 |  |
 
@@ -100,7 +100,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
-| Running | 1.0139 | 0.9574 | 9.0769 | 30.7790 |  |
+| Running | 1.0139 | 0.9574 | 9.0769 | 30.7790 | error |
 | DGL | 0.8725 | 1.1420 | 46.5929 | 68.4477 | 1030.8212 |
 
 #### Random edge sampler
