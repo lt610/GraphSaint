@@ -1,12 +1,10 @@
 import math
 import os
 import time
-
 import torch as th
 import random
 import numpy as np
 import dgl.function as fn
-import torch
 import dgl
 from dgl.sampling import random_walk, pack_traces
 

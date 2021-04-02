@@ -1,17 +1,9 @@
 import argparse
 import os
 import time
-import random
-
 import numpy as np
-import networkx as nx
-import sklearn.preprocessing
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import dgl
-from dgl.data import register_data_args
-from sampler import SAINTNodeSampler, SAINTEdgeSampler, SAINTRandomWalkSampler
 from modules import GCNNet
 from utils import Logger, evaluate, save_log_dir, load_data
 
