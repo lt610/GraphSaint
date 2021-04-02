@@ -67,7 +67,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 #### Full graph
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
-| Full | 0.8765 | 0.5096 | 0.9456 |  |  |
+| Full | 0.8765 | 0.5096 | 0.9456 | 0.4253 |  |
 #### Random node sampler
 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
@@ -75,7 +75,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 | Paper | 0.960±0.001 | 0.507±0.001 | 0.962±0.001 | 0.641±0.000 | 0.782±0.004 |
 | Running | 0.9628 | 0.5077 | 0.9622 | 0.6393 |  |
 | DGL | 0.5257 | 0.4943 | 0.8721 | 0.4265 | oom |
-| DGL(Full) | 0.8765 | 0.5096 | 0.9456 |  |  |
+| DGL(Full) | 0.8765 | 0.5096 | 0.9456 | 0.4253 |  |
 
 #### Random edge sampler
 
@@ -84,7 +84,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 | Paper | 0.981±0.007 | 0.510±0.002 | 0.966±0.001 | 0.653±0.003 | 0.807±0.001 |
 | Running | 0.9810 | 0.5066 | 0.9656 | 0.6531 | 0.8071 |
 | DGL | 0.9147 | 0.5013 | 0.9243 | 0.4121 | exceed |
-| DGL(Full) | 0.8765 | 0.5096 | 0.9456 |  |  |
+| DGL(Full) | 0.8765 | 0.5096 | 0.9456 | 0.4253 |  |
 
 #### Random walk sampler
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
@@ -92,7 +92,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 | Paper | 0.981±0.004 | 0.511±0.001 | 0.966±0.001 | 0.653±0.003 | 0.815±0.001 |
 | Running | 0.9812 | 0.5104 | 0.9648 | 0.6527 | 0.8131 |
 | DGL | 0.9199 | 0.5045 | 0.8775 | 0.4078 | oom |
-| DGL(Full) | 0.8765 | 0.5096 | 0.9456 |  |  |
+| DGL(Full) | 0.8765 | 0.5096 | 0.9456 | 0.4253 |  |
 
 ### Sampling time
 
