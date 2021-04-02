@@ -64,48 +64,55 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 
 ### F1-micro
 
+#### Full graph
+| Method | PPI | Flickr | Reddit | Yelp | Amazon |
+| --- | --- | --- | --- | --- | --- |
+| Full | 0.8765 | 0.5096 | 0.9456 |  |  |
 #### Random node sampler
 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
-| Paper | 0.960±0.001 | 0.507±0.001 | 0.962±0.001 |  |  |
-| Running | 0.9628 | 0.5077 | 0.9622 |  |  |
-| DGL | 0.5257 | 0.4943 | 0.8721 |  |  |
+| Paper | 0.960±0.001 | 0.507±0.001 | 0.962±0.001 | 0.641±0.000 | 0.782±0.004 |
+| Running | 0.9628 | 0.5077 | 0.9622 | 0.6393 |  |
+| DGL | 0.5257 | 0.4943 | 0.8721 | 0.4265 | oom |
+| DGL(Full) | 0.8765 | 0.5096 | 0.9456 |  |  |
 
-#### Random Edge sampler
+#### Random edge sampler
 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
-| Paper | 0.981±0.007 | 0.510±0.002 | 0.966±0.001 |  |  |
-| Running | 0.9810 | 0.5066 | 0.9656 |  |  |
-| DGL | 0.9147 | 0.5013 | 0.9243 |  |  |
+| Paper | 0.981±0.007 | 0.510±0.002 | 0.966±0.001 | 0.653±0.003 | 0.807±0.001 |
+| Running | 0.9810 | 0.5066 | 0.9656 | 0.6531 | 0.8071 |
+| DGL | 0.9147 | 0.5013 | 0.9243 | 0.4121 | exceed |
+| DGL(Full) | 0.8765 | 0.5096 | 0.9456 |  |  |
 
-#### Random Walk sampler
+#### Random walk sampler
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
-| Paper | 0.981±0.004 | 0.511±0.001 | 0.966±0.001 |  |  |
-| Running | 0.9812 | 0.5104 | 0.9648 |  |  |
-| DGL | 0.9199 | 0.5045 | 0.8775 |  |  |
+| Paper | 0.981±0.004 | 0.511±0.001 | 0.966±0.001 | 0.653±0.003 | 0.815±0.001 |
+| Running | 0.9812 | 0.5104 | 0.9648 | 0.6527 | 0.8131 |
+| DGL | 0.9199 | 0.5045 | 0.8775 | 0.4078 | oom |
+| DGL(Full) | 0.8765 | 0.5096 | 0.9456 |  |  |
 
-### Sample time
+### Sampling time
 
 #### Random node sampler
 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
-| Running | 1.0139 | 0.9574 | 9.0769 |  |  |
-| DGL | 0.8725 | 1.1420 | 46.5929 | 68.4477 |  |
+| Running | 1.0139 | 0.9574 | 9.0769 | 30.7790 |  |
+| DGL | 0.8725 | 1.1420 | 46.5929 | 68.4477 | 1030.8212 |
 
-#### Random Edge sampler
-
-| Method | PPI | Flickr | Reddit | Yelp | Amazon |
-| --- | --- | --- | --- | --- | --- |
-| Running | 0.8712 | 0.8764 | 4.7546 |  |  |
-| DGL | 0.8635 | 1.0033 | 87.5684 |  |  |
-
-#### Random Walk sampler
+#### Random edge sampler
 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
-| Running | 1.0880 | 1.7588 | 7.2055 |  |  |
-| DGL | 0.7270 | 0.8973 | 58.1987 |  |  |
+| Running | 0.8712 | 0.8764 | 4.7546 | 17.1285 | 103.6099 |
+| DGL | 0.8635 | 1.0033 | 87.5684 | 250.0589 | exceed |
+
+#### Random walk sampler
+
+| Method | PPI | Flickr | Reddit | Yelp | Amazon |
+| --- | --- | --- | --- | --- | --- |
+| Running | 1.0880 | 1.7588 | 7.2055 | 25.0617 | 172.1458 |
+| DGL | 0.7270 | 0.8973 | 58.1987 | 81.8309 | 2918.3490 |
