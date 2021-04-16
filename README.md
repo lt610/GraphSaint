@@ -76,7 +76,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
 | Paper | 0.960±0.001 | 0.507±0.001 | 0.962±0.001 | 0.641±0.000 | 0.782±0.004 |
-| Running | 0.9628 | 0.5077 | 0.9622 | 0.6393 | error |
+| Running | 0.9628 | 0.5077 | 0.9622 | 0.6393 |  |
 | DGL | 0.9132 | 0.5037 | 0.8656 | 0.6460 | 0.7843 |
 
 #### Random edge sampler
