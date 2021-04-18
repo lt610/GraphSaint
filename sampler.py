@@ -1,4 +1,3 @@
-import math
 import os
 import time
 import torch as th
@@ -7,6 +6,7 @@ import numpy as np
 import dgl.function as fn
 import dgl
 from dgl.sampling import random_walk, pack_traces
+
 
 # The base class of sampler
 class SAINTSampler(object):
@@ -18,6 +18,7 @@ class SAINTSampler(object):
         :param node_budget: expected number of sampled nodes
         :param num_repeat: number of repeating sampling one node
         """
+        self.g = g
         self.train_g: dgl.graph = g.subgraph(train_nid)
         self.dn, self.num_repeat = dn, num_repeat
         self.node_counter = th.zeros((self.train_g.num_nodes(),))
@@ -33,7 +34,7 @@ class SAINTSampler(object):
             os.makedirs('./subgraphs/', exist_ok=True)
 
             self.subgraphs = []
-            self.N = sampled_nodes = 0
+            self.N, sampled_nodes = 0, 0
 
             start_time = time.time()
             while sampled_nodes < self.train_g.num_nodes() * num_repeat:
@@ -50,7 +51,7 @@ class SAINTSampler(object):
 
         self.train_g.ndata['l_n'] = th.Tensor(loss_norm)
         self.train_g.edata['w'] = th.Tensor(aggr_norm)
-        self.__compute__degree()
+        self.__compute_degree_norm()
 
         self.num_batch = math.ceil(self.train_g.num_nodes() / node_budget)
         random.shuffle(self.subgraphs)
@@ -62,6 +63,7 @@ class SAINTSampler(object):
         self.prob = None
         self.node_counter = None
         self.edge_counter = None
+        self.g = None
 
     def __counter__(self, sampled_nodes):
 
@@ -92,8 +94,10 @@ class SAINTSampler(object):
 
         return aggr_norm.numpy(), loss_norm.numpy()
 
-    def __compute__degree(self):
-        self.train_g.ndata['D_in'] = 1. / self.train_g.in_degrees().float().clamp(min=1).unsqueeze(1)
+    def __compute_degree_norm(self):
+
+        self.train_g.ndata['train_D_norm'] = 1. / self.train_g.in_degrees().float().clamp(min=1).unsqueeze(1)
+        self.g.ndata['full_D_norm'] = 1. / self.g.in_degrees().float().clamp(min=1).unsqueeze(1)
 
     def __sample__(self):
         raise NotImplementedError
@@ -129,11 +133,7 @@ class SAINTNodeSampler(SAINTSampler):
 
     def __sample__(self):
         if self.prob is None:
-            self.train_g.ndata['D_in'] = 1. / self.train_g.in_degrees().float().clamp(min=1).square()
-            self.train_g.update_all(fn.copy_src('D_in', 'd'),
-                                    fn.sum('d', 'prop'))
-            self.train_g.ndata.pop('D_in')
-            self.prob = self.train_g.ndata.pop('prop')
+            self.prob = self.train_g.in_degrees().float().clamp(min=1)
 
         sampled_nodes = th.multinomial(self.prob, num_samples=self.node_budget, replacement=True).unique()
         self.__counter__(sampled_nodes)
@@ -159,7 +159,9 @@ class SAINTEdgeSampler(SAINTSampler):
             src_degrees, dst_degrees = self.train_g.in_degrees(src).float().clamp(min=1),\
                                        self.train_g.in_degrees(dst).float().clamp(min=1)
             self.prob = 1. / src_degrees + 1. / dst_degrees
+
         sampled_edges = th.multinomial(self.prob, num_samples=self.edge_budget, replacement=True).unique()
+
         sampled_src, sampled_dst = self.train_g.find_edges(sampled_edges)
         sampled_nodes = th.cat([sampled_src, sampled_dst]).unique()
         self.__counter__(sampled_nodes)
@@ -185,6 +187,3 @@ class SAINTRandomWalkSampler(SAINTSampler):
         sampled_nodes = sampled_nodes.unique()
         self.__counter__(sampled_nodes)
         return sampled_nodes.numpy()
-
-
-
