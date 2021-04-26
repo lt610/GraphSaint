@@ -93,6 +93,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 #### Random edge sampler
 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
+| --- | --- | --- | --- | --- | --- |
 | Sampling(Running) | 0.72 | 0.56 | 4.46 | 12.38 | 101.76 |
 | Sampling(DGL) | 0.50 | 0.72 | 53.88 | 254.63 | exceed |
 | Normalization(Running) | 0.68 | 2.62 | 9.42 | 26.64 | 62.59 |
@@ -101,6 +102,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 #### Random walk sampler
 
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
+| --- | --- | --- | --- | --- | --- |
 | Sampling(Running) | 0.83 | 1.22 | 6.69 | 18.84 | 209.83 |
 | Sampling(DGL) | 0.28 | 0.63 | 4.02 | 22.01 | 55.09 |
 | Normalization(Running) | 0.87 | 2.60 | 10.28 | 24.41 | 145.85 |
