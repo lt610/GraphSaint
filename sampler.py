@@ -187,3 +187,5 @@ class SAINTRandomWalkSampler(SAINTSampler):
         sampled_nodes, _, _, _ = pack_traces(traces, types)
         sampled_nodes = sampled_nodes.unique()
         return sampled_nodes.numpy()
+
+

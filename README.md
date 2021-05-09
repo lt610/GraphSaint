@@ -18,7 +18,7 @@ Contributor: Liu Tang ([@lt610](https://github.com/lt610))
 
 ## Dataset
 
-All datasets used are provided by Author's [code](https://github.com/GraphSAINT/GraphSAINT). They are available in [Google Drive](https://drive.google.com/drive/folders/1zycmmDES39zVlbVCYs88JTJ1Wm5FbfLz) (alternatively, [Baidu Wangpan (code: f1ao)](https://pan.baidu.com/s/1SOb0SiSAXavwAcNqkttwcg#list/path=%2F)). Dataset summary("m" stands for multi-class classification, and "s" for single-class.):
+All datasets used are provided by Author's [code](https://github.com/GraphSAINT/GraphSAINT). They are available in [Google Drive](https://drive.google.com/drive/folders/1zycmmDES39zVlbVCYs88JTJ1Wm5FbfLz) (alternatively, [Baidu Wangpan (code: f1ao)](https://pan.baidu.com/s/1SOb0SiSAXavwAcNqkttwcg#list/path=%2F)). Once you download the datasets, you need to rename graphsaintdata to data. Dataset summary("m" stands for multi-label classification, and "s" for single-label.):
 | Dataset | Nodes | Edges | Degree | Feature | Classes | Train/Val/Test |
 | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
 | PPI | 14,755 | 225,270 | 15 | 50 | 121(m) | 0.66/0.12/0.22 |
@@ -31,21 +31,21 @@ All datasets used are provided by Author's [code](https://github.com/GraphSAINT/
 
 Run with following:
 ```bash
-python train_sampling.py --gpu 0 --dataset ppi --sampler node --node-budget 6000 --num-repeat 50 --n-epochs 1000 --n-hidden 512 --arch 1-0-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset ppi --sampler edge --edge-budget 4000 --num-repeat 50 --n-epochs 1000 --n-hidden 512 --arch 1-0-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset ppi --sampler rw --num-roots 3000 --length 2 --num-repeat 50 --n-epochs 1000 --n-hidden 512 --arch 1-0-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset flickr --sampler node --node-budget 8000 --num-repeat 25 --n-epochs 30 --n-hidden 256 --arch 1-1-0 --batch-norm --dropout 0.2
-python train_sampling.py --gpu 0 --dataset flickr --sampler edge --edge-budget 6000 --num-repeat 25 --n-epochs 15 --n-hidden 256 --arch 1-1-0 --batch-norm --dropout 0.2
-python train_sampling.py --gpu 0 --dataset flickr --sampler rw --num-roots 6000 --length 2 --num-repeat 25 --n-epochs 15 --n-hidden 256 --arch 1-1-0 --batch-norm --dropout 0.2
-python train_sampling.py --gpu 0 --dataset reddit --sampler node --node-budget 8000 --num-repeat 50 --n-epochs 40 --n-hidden 128 --arch 1-0-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset reddit --sampler edge --edge-budget 6000 --num-repeat 50 --n-epochs 40 --n-hidden 128 --arch 1-0-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset reddit --sampler rw --num-roots 2000 --length 4 --num-repeat 50 --n-epochs 30 --n-hidden 128 --arch 1-0-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset yelp --sampler node --node-budget 5000 --num-repeat 50 --n-epochs 50 --n-hidden 512 --arch 1-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset yelp --sampler edge --edge-budget 2500 --num-repeat 50 --n-epochs 100 --n-hidden 512 --arch 1-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset yelp --sampler rw --num-roots 1250 --length 2 --num-repeat 50 --n-epochs 75 --n-hidden 512 --arch 1-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset amazon --sampler node --node-budget 4500 --num-repeat 50 --n-epochs 30 --n-hidden 512 --arch 1-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset amazon --sampler edge --edge-budget 2000 --num-repeat 50 --n-epochs 30 --n-hidden 512 --arch 1-1-0 --batch-norm --dropout 0.1
-python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 --length 2 --num-repeat 50 --n-epochs 30 --n-hidden 512 --arch 1-1-0 --batch-norm --dropout 0.1
+python train_sampling.py --gpu 0 --dataset ppi --sampler node --node-budget 6000 --num-repeat 50 --n-epochs 1000 --n-hidden 512 --arch 1-0-1-0
+python train_sampling.py --gpu 0 --dataset ppi --sampler edge --edge-budget 4000 --num-repeat 50 --n-epochs 1000 --n-hidden 512 --arch 1-0-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset ppi --sampler rw --num-roots 3000 --length 2 --num-repeat 50 --n-epochs 1000 --n-hidden 512 --arch 1-0-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset flickr --sampler node --node-budget 8000 --num-repeat 25 --n-epochs 30 --n-hidden 256 --arch 1-1-0 --dropout 0.2
+python train_sampling.py --gpu 0 --dataset flickr --sampler edge --edge-budget 6000 --num-repeat 25 --n-epochs 15 --n-hidden 256 --arch 1-1-0 --dropout 0.2
+python train_sampling.py --gpu 0 --dataset flickr --sampler rw --num-roots 6000 --length 2 --num-repeat 25 --n-epochs 15 --n-hidden 256 --arch 1-1-0 --dropout 0.2
+python train_sampling.py --gpu 0 --dataset reddit --sampler node --node-budget 8000 --num-repeat 50 --n-epochs 40 --n-hidden 128 --arch 1-0-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset reddit --sampler edge --edge-budget 6000 --num-repeat 50 --n-epochs 40 --n-hidden 128 --arch 1-0-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset reddit --sampler rw --num-roots 2000 --length 4 --num-repeat 50 --n-epochs 30 --n-hidden 128 --arch 1-0-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset yelp --sampler node --node-budget 5000 --num-repeat 50 --n-epochs 50 --n-hidden 512 --arch 1-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset yelp --sampler edge --edge-budget 2500 --num-repeat 50 --n-epochs 100 --n-hidden 512 --arch 1-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset yelp --sampler rw --num-roots 1250 --length 2 --num-repeat 50 --n-epochs 75 --n-hidden 512 --arch 1-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset amazon --sampler node --node-budget 4500 --num-repeat 50 --n-epochs 30 --n-hidden 512 --arch 1-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset amazon --sampler edge --edge-budget 2000 --num-repeat 50 --n-epochs 30 --n-hidden 512 --arch 1-1-0 --dropout 0.1
+python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 --length 2 --num-repeat 50 --n-epochs 30 --n-hidden 512 --arch 1-1-0 --dropout 0.1
 ```
 
 ## Comparison
@@ -62,7 +62,7 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 | --- | --- | --- | --- | --- | --- |
 | Paper | 0.960±0.001 | 0.507±0.001 | 0.962±0.001 | 0.641±0.000 | 0.782±0.004 |
 | Running | 0.9628 | 0.5077 | 0.9622 | 0.6393 | 0.7695 |
-| DGL | 0.9602 | 0.5094 | 0.9613 | 0.6412 | 0.7702 |
+| DGL | 0.9618 | 0.4828 | 0.9621 | 0.6360 | 0.7748 |
 
 #### Random edge sampler
 
@@ -70,14 +70,14 @@ python train_sampling.py --gpu 0 --dataset amazon --sampler rw --num-roots 1500 
 | --- | --- | --- | --- | --- | --- |
 | Paper | 0.981±0.007 | 0.510±0.002 | 0.966±0.001 | 0.653±0.003 | 0.807±0.001 |
 | Running | 0.9810 | 0.5066 | 0.9656 | 0.6531 | 0.8071 |
-| DGL | 0.9811 | 0.5075 | 0.9659 | 0.6530 | exceed |
+| DGL | 0.9818 | 0.5054 | 0.9653 | 0.6517 | exceed |
 
 #### Random walk sampler
 | Method | PPI | Flickr | Reddit | Yelp | Amazon |
 | --- | --- | --- | --- | --- | --- |
 | Paper | 0.981±0.004 | 0.511±0.001 | 0.966±0.001 | 0.653±0.003 | 0.815±0.001 |
 | Running | 0.9812 | 0.5104 | 0.9648 | 0.6527 | 0.8131 |
-| DGL | 0.9806 | 0.5122 | 0.9662 | 0.6530 | 0.8143 |
+| DGL | 0.9818 | 0.5018 | 0.9649 | 0.6516 | 0.8150 |
 
 ### Sampling time
 

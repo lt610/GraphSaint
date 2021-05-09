@@ -102,4 +102,3 @@ def load_data(args, multilabel):
 
     data = DataType(g=g, num_classes=num_classes, train_nid=train_nid)
     return data
-
